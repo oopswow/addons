@@ -27,12 +27,10 @@ RS485_DEVICE = {
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
 
-        "power":    { "id": 0x36, "cmd": 0x43, "ack": 0xC3, },
+        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
         "target":   { "id": 0x36, "cmd": 0x44, "ack": 0xC4, },
-        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0xC5, },
-        
-    },
-        
+    },    
+}
 
 DISCOVERY_DEVICE = {
     "ids": ["ezville_wallpad",],
