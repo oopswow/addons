@@ -774,11 +774,11 @@ def serial_loop():
                 loop_count = 1
 
         # 루프 카운트 세는데 실패하면 다른 걸로 시도해봄
-        if loop_count == 0 and time.time() - start_time > 6:
-            print("check loop count fail: there are no F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}! try F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}...".format(HEADER_0_FIRST[0][0],HEADER_0_FIRST[0][1],HEADER_0_FIRST[1][0],HEADER_0_FIRST[1][1],header_0_first_candidate[-1][0][0],header_0_first_candidate[-1][0][1],header_0_first_candidate[-1][1][0],header_0_first_candidate[-1][1][1]))
-            HEADER_0_FIRST = header_0_first_candidate.pop()
-            start_time = time.time()
-            scan_count = 0
+        #if loop_count == 0 and time.time() - start_time > 6:
+        #    print("check loop count fail: there are no F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}! try F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}...".format(HEADER_0_FIRST[0][0],HEADER_0_FIRST[0][1],HEADER_0_FIRST[1][0],HEADER_0_FIRST[1][1],header_0_first_candidate[-1][0][0],header_0_first_candidate[-1][0][1],header_0_first_candidate[-1][1][0],header_0_first_candidate[-1][1][1]))
+        #    HEADER_0_FIRST = header_0_first_candidate.pop()
+        #    start_time = time.time()
+        #    scan_count = 0
 
 # KTDO: 수정 완료
 def dump_loop():
