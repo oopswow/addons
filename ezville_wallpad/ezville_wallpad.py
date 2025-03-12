@@ -29,10 +29,18 @@ RS485_DEVICE = {
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
 
-        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
+        "power":   { "id": 0x36, "cmd": 0x43, "ack": 0xC3, },
         "target":   { "id": 0x36, "cmd": 0x44, "ack": 0xC4, },
+        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0xC5, },
     },
-        
+    #가스밸브
+    "gasvalve": {
+        "query":    { "id": 0x12, "cmd": 0x01, },
+        "state":    { "id": 0x12, "cmd": 0x81, },
+        "last":     { },
+
+        "power":   { "id": 0x12, "cmd": 0x41, "ack": 0xC1, },
+    },        
 # KTDO: 기존 코드
 #        "query":    { "header": 0xAC79, "length":  5, "id": 2, },
 #        "state":    { "header": 0xB079, "length":  5, "id": 2, "parse": {("power", 3, "bitmap")} },
