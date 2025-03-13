@@ -10,7 +10,6 @@ from logging.handlers import TimedRotatingFileHandler
 import os.path
 import re
 
-####################
 # 기존 월패드 애드온의 역할하는 부분
 RS485_DEVICE = {
     # 전등 스위치
@@ -63,51 +62,6 @@ DISCOVERY_PAYLOAD = {
         "min_temp": 5,
         "max_temp": 40,
     } ],
-#    "plug": [ {
-#        "_intg": "switch",
-#        "~": "{prefix}/plug/{idn}/power",
-#        "name": "{prefix}_plug_{idn}",
-#        "stat_t": "~/state",
-#        "cmd_t": "~/command",
-#        "icon": "mdi:power-plug",
-#    },
-#    {
-#        "_intg": "switch",
-#        "~": "{prefix}/plug/{idn}/idlecut",
-#        "name": "{prefix}_plug_{idn}_standby_cutoff",
-#        "stat_t": "~/state",
-#        "cmd_t": "~/command",
-#        "icon": "mdi:leaf",
-#    },
-#    {
-#        "_intg": "sensor",
-#        "~": "{prefix}/plug/{idn}",
-#        "name": "{prefix}_plug_{idn}_power_usage",
-#        "stat_t": "~/current/state",
-#        "unit_of_meas": "W",
-#    } ],
-#    "cutoff": [ {
-#        "_intg": "switch",
-#        "~": "{prefix}/cutoff/{idn}/power",
-#        "name": "{prefix}_light_cutoff_{idn}",
-#        "stat_t": "~/state",
-#        "cmd_t": "~/command",
-#    } ],
-#    "gas_valve": [ {
-#        "_intg": "sensor",
-#        "~": "{prefix}/gas_valve/{idn}",
-#        "name": "{prefix}_gas_valve_{idn}",
-#        "stat_t": "~/power/state",
-#        "icon": "mdi:valve",
-#    } ],
-#    "energy": [ {
-#        "_intg": "sensor",
-#        "~": "{prefix}/energy/{idn}",
-#        "name": "_",
-#        "stat_t": "~/current/state",
-#        "unit_of_meas": "_",
-#        "val_tpl": "_",
-#    } ],
 }
 
 STATE_HEADER = {
@@ -120,6 +74,7 @@ QUERY_HEADER = {
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
+
 # 제어 명령의 ACK header만 모음
 ACK_HEADER = {
     prop[cmd]["id"]: (device, prop[cmd]["ack"])
@@ -137,26 +92,9 @@ for device, prop in RS485_DEVICE.items():
             ACK_MAP[code["id"]][code["cmd"]] = {}
             ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
 
-# KTDO: 아래 미사용으로 코멘트 처리
-#HEADER_0_STATE = 0xB0
 # KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
 HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
-# KTDO: Virtual은 Skip
-#header_0_virtual = {}
-# KTDO: 아래 미사용으로 코멘트 처리
-#HEADER_1_SCAN = 0x5A
 header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
-
-
-# human error를 로그로 찍기 위해서 그냥 전부 구독하자
-#SUB_LIST = { "{}/{}/+/+/command".format(Options["mqtt"]["prefix"], device) for device in RS485_DEVICE } |\
-#           { "{}/virtual/{}/+/command".format(Options["mqtt"]["prefix"], device) for device in VIRTUAL_DEVICE }
-
-# KTDO: Virtual은 Skip
-#virtual_watch = {}
-#virtual_trigger = {}
-#virtual_ack = {}
-#virtual_avail = []
 
 serial_queue = {}
 serial_ack = {}
@@ -333,43 +271,6 @@ def init_option(argv):
     Options["mqtt"]["_discovery"] = Options["mqtt"]["discovery"]
 
 
-#def init_virtual_device():
-#    global virtual_watch
-#
-#    if Options["entrance_mode"] == "full" or Options["entrance_mode"] == "new":
-#        if Options["entrance_mode"] == "new":
-#            ent = "entrance2"
-#        else:
-#            ent = "entrance"
-#
-#        header_0_virtual[VIRTUAL_DEVICE[ent]["header0"]] = ent
-#        virtual_trigger[ent] = {}
-#
-#        # 평상시 응답할 항목 등록
-#        virtual_watch.update({
-#            (VIRTUAL_DEVICE[ent]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(VIRTUAL_DEVICE[ent]["resp_size"], "big")
-#            for prop in VIRTUAL_DEVICE[ent]["default"].values()
-#        })
-#
-#        # full 모드에서 일괄소등 지원 안함
-#        STATE_HEADER.pop(RS485_DEVICE["cutoff"]["state"]["header"])
-#        RS485_DEVICE.pop("cutoff")
-#
-#    if Options["intercom_mode"] == "on":
-#        VIRTUAL_DEVICE["intercom"]["header0"] = int(Options["rs485"]["intercom_header"][:2], 16)
-#
-#        header_0_virtual[VIRTUAL_DEVICE["intercom"]["header0"]] = "intercom"
-#        virtual_trigger["intercom"] = {}
-#
-#        # 평상시 응답할 항목 등록
-#        virtual_watch.update({
-#            (VIRTUAL_DEVICE["intercom"]["header0"] << 8) + prop["header1"]: prop["resp"].to_bytes(4, "big")
-#            for prop in VIRTUAL_DEVICE["intercom"]["default"].values()
-#        })
-#
-#        # availability 관련
-#        for header_1 in (0x31, 0x32, 0x36, 0x3E):
-#            virtual_avail.append((VIRTUAL_DEVICE["intercom"]["header0"] << 8) + header_1)
 
 # KTDO: 수정 완료
 def mqtt_discovery(payload):
@@ -384,89 +285,6 @@ def mqtt_discovery(payload):
     logger.info("Add new device:  {}".format(topic))
     mqtt.publish(topic, json.dumps(payload))
 
-
-#def mqtt_add_virtual():
-#    # 현관스위치 장치 등록
-#    if Options["entrance_mode"] != "off":
-#        if Options["entrance_mode"] == "new":
-#            ent = "entrance2"
-#        else:
-#            ent = "entrance"
-#
-#        prefix = Options["mqtt"]["prefix"]
-#        for payloads in DISCOVERY_VIRTUAL[ent]:
-#            payload = payloads.copy()
-#            payload["~"] = payload["~"].format(prefix)
-#            payload["name"] = payload["name"].format(prefix)
-#
-#            mqtt_discovery(payload)
-#
-#            # 트리거 초기 상태 설정
-#            topic = payload["~"] + "/state"
-#            logger.info("initial state:   {} = OFF".format(topic))
-#            mqtt.publish(topic, "OFF")
-#
-#    # 인터폰 장치 등록
-#    if Options["intercom_mode"] != "off":
-#        prefix = Options["mqtt"]["prefix"]
-#        for payloads in DISCOVERY_VIRTUAL["intercom"]:
-#            payload = payloads.copy()
-#            payload["~"] = payload["~"].format(prefix)
-#            payload["name"] = payload["name"].format(prefix)
-#
-#            mqtt_discovery(payload)
-#
-#            # 트리거 초기 상태 설정
-#            topic = payload["~"] + "/state"
-#            logger.info("initial state:   {} = OFF".format(topic))
-#            mqtt.publish(topic, "OFF")
-#
-#        # 초인종 울리기 전까지 문열림 스위치 offline으로 설정
-#        payload = "offline"
-#        topic = "{}/virtual/intercom/public/available".format(prefix)
-#        logger.info("doorlock state:  {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#        topic = "{}/virtual/intercom/private/available".format(prefix)
-#        logger.info("doorlock state:  {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-
-
-#def mqtt_virtual(topics, payload):
-#    device = topics[2]
-#    trigger = topics[3]
-#    triggers = VIRTUAL_DEVICE[device]["trigger"]
-#
-#    # HA에서 잘못 보내는 경우 체크
-#    if len(topics) != 5:
-#        logger.error("    invalid topic length!"); return
-#    if trigger not in triggers:
-#        logger.error("    invalid trigger!"); return
-#
-#    # OFF가 없는데(ev, gas) OFF가 오면, 이전 ON 명령의 시도 중지
-#    if payload not in triggers[trigger]:
-#        virtual_pop(device, trigger, "ON")
-#        return
-#
-#    # 오류 체크 끝났으면 queue 에 넣어둠
-#    virtual_trigger[device][(trigger, payload)] = time.time()
-#
-#    # ON만 있는 명령은, 명령이 queue에 있는 동안 switch를 ON으로 표시
-#    prefix = Options["mqtt"]["prefix"]
-#    if "OFF" not in triggers[trigger]:
-#        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-#        logger.info("publish to HA:   {} = {}".format(topic, "ON"))
-#        mqtt.publish(topic, "ON")
-#
-#    # ON/OFF 있는 명령은, 마지막으로 받은 명령대로 표시
-#    else:
-#        topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-#        logger.info("publish to HA:   {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#
-#    # 그동안 조용히 있었어도, 이젠 가로채서 응답해야 함
-#    if device == "entrance" and Options["entrance_mode"] == "minimal":
-#        query = VIRTUAL_DEVICE["entrance"]["default"]["query"]
-#        virtual_watch[query["header"]] = query["resp"]
 
 
 # KTDO: 수정 완료
@@ -540,19 +358,7 @@ def mqtt_device(topics, payload):
         packet[6], packet[7] = serial_generate_checksum(packet)
     
     packet = bytes(packet)
-    
-    # KTDO: 상기 코드로 대체
-    #packet = bytearray(cmd["length"])
-    #packet[0] = cmd["header"] >> 8
-    #packet[1] = cmd["header"] & 0xFF
-    #packet[cmd["pos"]] = int(float(payload))
-    #
-    #if "id" in cmd: packet[cmd["id"]] = int(idn)
-    #
-    ## parity 생성 후 queue 에 넣어둠
-    #packet[-1] = serial_generate_checksum(packet)
-    #packet = bytes(packet)
-    
+
     serial_queue[packet] = time.time()
 
 
@@ -560,8 +366,6 @@ def mqtt_device(topics, payload):
 def mqtt_init_discovery():
     # HA가 재시작됐을 때 모든 discovery를 다시 수행한다
     Options["mqtt"]["_discovery"] = Options["mqtt"]["discovery"]
-# KTDO: Virtual Device는 Skip
-#    mqtt_add_virtual()
     for device in RS485_DEVICE:
         RS485_DEVICE[device]["last"] = {}
 
@@ -580,9 +384,6 @@ def mqtt_on_message(mqtt, userdata, msg):
     if device == "status":
         if payload == "online":
             mqtt_init_discovery()
-# KTDO: Virtual Device는 Skip
-#    elif device == "virtual":
-#        mqtt_virtual(topics, payload)
     elif device == "debug":
         mqtt_debug(topics, payload)
     else:
@@ -605,11 +406,6 @@ def mqtt_on_connect(mqtt, userdata, flags, rc, properties):
     mqtt.subscribe(topic, 0)
 
     prefix = Options["mqtt"]["prefix"]
-# KTDO: Virtual 관련 일단 comment
-#    if Options["entrance_mode"] != "off" or Options["intercom_mode"] != "off":
-#        topic = "{}/virtual/+/+/command".format(prefix)
-#        logger.info("subscribe {}".format(topic))
-#        mqtt.subscribe(topic, 0)
     if Options["wallpad_mode"] != "off":
         topic = "{}/+/+/+/command".format(prefix)
         logger.info("subscribe {}".format(topic))
@@ -646,118 +442,6 @@ def start_mqtt_loop():
         logger.info("waiting MQTT connected ...")
         time.sleep(delay)
         delay = min(delay * 2, 10)
-
-
-#def virtual_enable(header_0, header_1):
-#    prefix = Options["mqtt"]["prefix"]
-#
-#    # 마무리만 하드코딩으로 좀 하자... 슬슬 귀찮다
-#    if header_1 == 0x32:
-#        payload = "online"
-#        topic = "{}/virtual/intercom/public/available".format(prefix)
-#        logger.info("doorlock status: {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#
-#    elif header_1 == 0x31:
-#        payload = "online"
-#        topic = "{}/virtual/intercom/private/available".format(prefix)
-#        logger.info("doorlock status: {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_a"]
-#
-#    elif header_1 == 0x36 or header_1 == 0x3E:
-#        payload = "offline"
-#        topic = "{}/virtual/intercom/public/available".format(prefix)
-#        logger.info("doorlock status: {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#        topic = "{}/virtual/intercom/private/available".format(prefix)
-#        logger.info("doorlock status: {} = {}".format(topic, payload))
-#        mqtt.publish(topic, payload)
-#        VIRTUAL_DEVICE["intercom"]["trigger"]["private"] = VIRTUAL_DEVICE["intercom"]["trigger"]["priv_b"]
-
-
-#def virtual_pop(device, trigger, cmd):
-#    query = VIRTUAL_DEVICE[device]["default"]["query"]
-#    triggers = VIRTUAL_DEVICE[device]["trigger"]
-#
-#    virtual_trigger[device].pop((trigger, cmd), None)
-#    virtual_ack.pop((VIRTUAL_DEVICE[device]["header0"] << 8) + triggers[trigger]["ack"], None)
-#
-#    # 명령이 queue에서 빠지면 OFF로 표시
-#    prefix = Options["mqtt"]["prefix"]
-#    topic = "{}/virtual/{}/{}/state".format(prefix, device, trigger)
-#    logger.info("publish to HA:   {} = {}".format(topic, "OFF"))
-#    mqtt.publish(topic, "OFF")
-#
-#    # minimal 모드일 때, 조용해질지 여부
-#    if not virtual_trigger[device] and Options["entrance_mode"] == "minimal":
-#        entrance_watch.pop(query["header"], None)
-
-
-#def virtual_query(header_0, header_1):
-#    device = header_0_virtual[header_0]
-#    query = VIRTUAL_DEVICE[device]["default"]["query"]["header1"]
-#    triggers = VIRTUAL_DEVICE[device]["trigger"]
-#    resp_size = VIRTUAL_DEVICE[device]["resp_size"]
-#
-#    # pending이 남은 상태면 지금 시도해봐야 가망이 없음
-#    if conn.check_pending_recv():
-#        return
-#
-#    # 아직 2Byte 덜 받았으므로 올때까지 기다리는게 정석 같지만,
-#    # 조금 일찍 시작하는게 성공률이 더 높은거 같기도 하다.
-#    length = 2 - Options["rs485"]["early_response"]
-#    if length > 0:
-#        while conn.check_in_waiting() < length: pass
-#
-#    if virtual_trigger[device] and header_1 == query:
-#        # 하나 뽑아서 보내봄
-#        trigger, cmd = next(iter(virtual_trigger[device]))
-#        resp = triggers[trigger][cmd].to_bytes(resp_size, "big")
-#        conn.send(resp)
-#
-#        # retry time 관리, 초과했으면 제거
-#        elapsed = time.time() - virtual_trigger[device][trigger, cmd]
-#        if elapsed > Options["rs485"]["max_retry"]:
-#            logger.error("send to wallpad: {} max retry time exceeded!".format(resp.hex()))
-#            virtual_pop(device, trigger, cmd)
-#        elif elapsed > 3:
-#            logger.warning("send to wallpad: {}, try another {:.01f} seconds...".format(resp.hex(), Options["rs485"]["max_retry"] - elapsed))
-#            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
-#        else:
-#            logger.info("send to wallpad: {}".format(resp.hex()))
-#            virtual_ack[(header_0 << 8) + triggers[trigger]["ack"]] = (device, trigger, cmd)
-#
-#    # full 모드일 때, 일상 응답
-#    else:
-#        header = (header_0 << 8) | header_1
-#        if header in virtual_watch:
-#            resp = virtual_watch[header]
-#
-#            # Byte[2] 가 wallpad를 따라가야 하는 경우
-#            if resp[2] == 0xFF:
-#                ba = bytearray(resp)
-#                ba[2] = conn.recv(1)[0]
-#                ba[3] = serial_generate_checksum(ba)
-#                resp = bytes(ba)
-#
-#            conn.send(resp)
-
-
-#def virtual_clear(header):
-#    logger.info("ack frm wallpad: {}".format(hex(header)))
-#
-#    device, trigger, cmd = virtual_ack[header]
-#    triggers = VIRTUAL_DEVICE[device]["trigger"]
-#
-#    # 성공한 명령을 지움
-#    virtual_pop(*virtual_ack[header])
-#    virtual_ack.pop(header, None)
-#
-#    # 다음 트리거로 이어지면 추가
-#    if triggers[trigger]["next"] != None:
-#        next_trigger = triggers[trigger]["next"]
-#        virtual_trigger[device][next_trigger] = time.time()
 
 # KTDO: 수정 완료
 def serial_verify_checksum(packet):
@@ -871,20 +555,6 @@ def serial_new_device(device, packet):
 
             mqtt_discovery(payload)
 
-#    elif device in DISCOVERY_PAYLOAD:
-#        for payloads in DISCOVERY_PAYLOAD[device]:
-#            payload = payloads.copy()
-#            payload["~"] = payload["~"].format(prefix=prefix, idn=idn)
-#            payload["name"] = payload["name"].format(prefix=prefix, idn=idn)
-#
-#            # 실시간 에너지 사용량에는 적절한 이름과 단위를 붙여준다 (단위가 없으면 그래프로 출력이 안됨)
-#            # KTDO: Ezville에 에너지 확인 쿼리 없음
-#            if device == "energy":
-#                payload["name"] = "{}_{}_consumption".format(prefix, ("power", "gas", "water")[idn])
-#                payload["unit_of_meas"] = ("W", "m³/h", "m³/h")[idn]
-#                payload["val_tpl"] = ("{{ value }}", "{{ value | float / 100 }}", "{{ value | float / 100 }}")[idn]
-#
-#            mqtt_discovery(payload)
 
 # KTDO: 수정 완료
 def serial_receive_state(device, packet):
