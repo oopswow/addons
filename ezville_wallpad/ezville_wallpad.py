@@ -102,7 +102,7 @@ serial_ack = {}
 last_query = int(0).to_bytes(2, "big")
 last_topic_list = {}
 
-mqtt = paho_mqtt.Client(paho_mqtt.CallbackAPIVersion.VERSION2)
+mqtt = paho_mqtt.Client()
 mqtt_connected = False
 
 logger = logging.getLogger(__name__)
@@ -391,7 +391,7 @@ def mqtt_on_message(mqtt, userdata, msg):
 
         
 # KTDO: 수정 완료
-def mqtt_on_connect(mqtt, userdata, flags, rc, properties):
+def mqtt_on_connect(mqtt, userdata, flags, rc):
     if rc == 0:
         logger.info("MQTT connect successful!")
         global mqtt_connected
@@ -413,7 +413,7 @@ def mqtt_on_connect(mqtt, userdata, flags, rc, properties):
 
         
 # KTDO: 수정 완료
-def mqtt_on_disconnect(mqtt, userdata, flags, rc, properties):
+def mqtt_on_disconnect(mqtt, userdata, flags, rc):
     logger.warning("MQTT disconnected! ({})".format(rc))
     global mqtt_connected
     mqtt_connected = False
@@ -477,49 +477,9 @@ def serial_generate_checksum(packet):
     # KTDO: add 추가 생성 
     add = (sum(packet) + checksum) & 0xFF 
     
-
-# KTDO: EzVille은 그냥 XOR
-#    # parity의 최상위 bit는 항상 0
-#    if checksum >= 0x80: checksum -= 0x80
-#    checksumadd = (checksum << 8) | add
-
-#    return checksumadd
     return checksum, add
 
-# KTDO: 코멘트 처리 
-#def serial_peek_value(device, packet):
-#    attr, pos, pattern = parse
-#    value = packet[pos]
-#    
-#    if device == "light":
-#        res = []
-#        for i in range(1, 8+1):
-#            res += [("{}{}".format(attr, i), "ON" if value & 1 else "OFF")]
-#            value >>= 1
-#        return res
-#    elif pattern == "toggle":
-#        value = "ON" if value & 1 else "OFF"
-#    elif pattern == "toggle2":
-#        value = "ON" if value & 0x10 else "OFF"
-#    elif pattern == "fan_toggle":
-#        value = 5 if value == 0 else 6
-#    elif pattern == "heat_toggle":
-#        value = "heat" if value & 1 else "off"
-#    elif pattern == "gas_toggle":
-#        value = "차단" if value & 1 else "열림"
-#    elif pattern == "value":
-#        pass
-#    elif pattern == "2Byte":
-#        value += packet[pos-1] << 8
-#    elif pattern == "6decimal":
-#        try:
-#            value = packet[pos : pos+3].hex()
-#        except:
-#            # 어쩌다 깨지면 뻗음...
-#            logger.warning("invalid packet, {} is not decimal".format(packet.hex()))
-#            value = 0
-#
-#    return [(attr, value)]
+
 
 # KTDO: 수정 완료
 def serial_new_device(device, packet):
