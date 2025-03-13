@@ -511,14 +511,21 @@ def mqtt_device(topics, payload):
     if device == "light":
         length = 10
         packet = bytearray(length)
+        # 패킷시작
         packet[0] = 0xF7
+        # Device Grop (ex. light 는 0E, thermo는 36)
         packet[1] = cmd["id"]
+        # Sub grop
         packet[2] = int(idn.split("_")[0]) << 4 | int(idn.split("_")[1])
+        # Command Type
         packet[3] = cmd["cmd"]
+        # Command 길이 (여기서는 3이니까 3바이트)
         packet[4] = 0x03
+        # 5에서 7까지는 Data
         packet[5] = int(idn.split("_")[2])
         packet[6] = int(float(payload))
         packet[7] = 0x00
+        #XOR하고 ADD 계산값
         packet[8], packet[9] = serial_generate_checksum(packet)
 
     elif device == "thermostat":
