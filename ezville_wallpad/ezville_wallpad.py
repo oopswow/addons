@@ -11,6 +11,7 @@ import os.path
 import re
 
 # 기존 월패드 애드온의 역할하는 부분
+# 각 장치들을 정의하는 딕셔너리
 RS485_DEVICE = {
     # 전등 스위치
     "light": {
@@ -39,6 +40,7 @@ DISCOVERY_DEVICE = {
     "sw": "oopswow/ha_addons/ezville_wallpad",
 }
 
+# MQTT에서 사용할 장치별 Topic 딕셔너리
 DISCOVERY_PAYLOAD = {
     "light": [ {
         "_intg": "light",
@@ -64,16 +66,27 @@ DISCOVERY_PAYLOAD = {
     } ],
 }
 
+#RS485_DEVICE에 정의된 장치들 중 "state" 키를 가진 항목들만 필터링하여 STATE_HEADER라는 새로운 딕셔너리를 만듭니다
 STATE_HEADER = {
     prop["state"]["id"]: (device, prop["state"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "state" in prop
 }
+#STATE_HEADER = {
+#    0x0E: ("light", 0x81),
+#    0x36: ("thermostat", 0x81),
+#}
+
 QUERY_HEADER = {
     prop["query"]["id"]: (device, prop["query"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
+#QUERY_HEADER = {
+#    0x0E: ("light", 0x01),
+#    0x36: ("thermostat", 0x01),
+#}
+
 
 # 제어 명령의 ACK header만 모음
 ACK_HEADER = {
@@ -82,6 +95,11 @@ ACK_HEADER = {
         for cmd, code in prop.items()
             if "ack" in code
 }
+#ACK_HEADER = {
+#    0x0E: ("light", 0xC1),
+#    0x36: ("thermostat", 0xC4), # Note: Duplicate ID keys will overwrite in Python dictionaries.
+#}
+
 
 # KTDO: 제어 명령과 ACK의 Pair 저장
 ACK_MAP = {}
@@ -91,6 +109,18 @@ for device, prop in RS485_DEVICE.items():
             ACK_MAP[code["id"]] = {}
             ACK_MAP[code["id"]][code["cmd"]] = {}
             ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
+
+#ACK_MAP = {
+#    0x0E: {
+#        0x41: 0xC1,
+#    },
+#    0x36: {
+#        0x44: 0xC4,
+#        0x45: 0xC5,
+#    },
+#}
+
+
 
 # KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
 HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
