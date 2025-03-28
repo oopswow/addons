@@ -54,8 +54,6 @@ DISCOVERY_PAYLOAD = {
         "_intg": "climate",
         "~": "{prefix}/thermostat/{grp}_{id}",
         "name": "{prefix}_thermostat_{grp}_{id}",
-        "unique_id": f"{prefix}_thermostat_{grp_id}_{id}",
-        "device": DISCOVERY_DEVICE,
         "mode_stat_t": "~/power/state",
         "temp_stat_t": "~/target/state",
         "temp_cmd_t": "~/target/command",
@@ -125,8 +123,8 @@ for device, prop in RS485_DEVICE.items():
 
 
 # KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
-HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
-header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
+#HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
+#header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
 
 serial_queue = {}
 serial_ack = {}
@@ -523,10 +521,6 @@ def serial_new_device(device, packet):
         grp_id = int(packet[2] >> 4)
         rm_id = int(packet[2] & 0x0F)
         light_count = int(packet[4]) - 1
-        
-        #id2 = last_query[3]
-        #num = idn >> 4
-        #idn = int("{:x}".format(idn))
 
         for id in range(1, light_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
@@ -661,18 +655,14 @@ def serial_receive_state(device, packet):
 # KTDO: 수정 완료
 def serial_get_header():
     try:
-        # 0x80보다 큰 byte가 나올 때까지 대기
         # KTDO: 시작 F7 찾기
         while 1:
             header_0 = conn.recv(1)[0]
-            #if header_0 >= 0x80: break
             if header_0 == 0xF7: break
 
-        # 중간에 corrupt되는 data가 있으므로 연속으로 0x80보다 큰 byte가 나오면 먼젓번은 무시한다
         # KTDO: 연속 0xF7 무시                                           
         while 1:
             header_1 = conn.recv(1)[0]
-            #if header_1 < 0x80: break
             if header_1 != 0xF7: break
             header_0 = header_1
         
@@ -740,28 +730,13 @@ def serial_loop():
         # 로그 출력
         sys.stdout.flush()
 
-        # 첫 Byte만 0x80보다 큰 두 Byte를 찾음
+        # 첫 Byte가 0xF7인 Byte를 찾음
         header_0, header_1, header_2, header_3 = serial_get_header()
-        # KTDO: 패킷단위로 분석할 것이라 합치지 않음.
-        # header = (header_0 << 8) | header_1
-
-# KTDO: Virtual Device는 Skip
-#        # 요청했던 동작의 ack 왔는지 확인
-#        if header in virtual_ack:
-#            virtual_clear(header)
-#
-#        # 인터폰 availability 관련 헤더인지 확인
-#        if header in virtual_avail:
-#            virtual_enable(header_0, header_1)
-#
-#        # 가상 장치로써 응답해야 할 header인지 확인
-#        if header_0 in header_0_virtual:
-#            virtual_query(header_0, header_1)
 
         # KTDO: int('20', base=16)
         # device로부터의 state 응답이면 확인해서 필요시 HA로 전송해야 함
         if header_1 in STATE_HEADER and header_3 in STATE_HEADER[header_1]:
-            #packet = bytes([header_0, header_1])
+
 
             # 몇 Byte짜리 패킷인지 확인
             #device, remain = STATE_HEADER[header]
