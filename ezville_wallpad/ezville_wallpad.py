@@ -798,10 +798,10 @@ def serial_loop():
 
         # 전체 루프 수 카운트
         # KTDO: 가스 밸브 쿼리로 확인
-        global HEADER_0_FIRST
+        #global HEADER_0_FIRST
         # KTDO: 2번째 Header가 장치 Header임
-        if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
-            loop_count += 1
+        #if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
+        #    loop_count += 1
 
             # 돌만큼 돌았으면 상황 판단
             if loop_count == 30:
