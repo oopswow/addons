@@ -496,18 +496,11 @@ def serial_verify_checksum(packet):
     # KTDO: ADD 계산
     add = sum(packet[:-1]) & 0xFF
 
-    # parity의 최상위 bit는 항상 0
-    # KTDO: EzVille은 아님
-    #if checksum >= 0x80: checksum -= 0x80
-
     # checksum이 안맞으면 로그만 찍고 무시
     # KTDO: ADD 까지 맞아야함.
     if checksum or add != packet[-1]:
         logger.warning("checksum fail! {}, {:02x}, {:02x}".format(packet.hex(), checksum, add))
         return False
-
-    # 정상
-    logger.INFO("checksum success!)
                 
     return True
 
