@@ -507,6 +507,8 @@ def serial_verify_checksum(packet):
         return False
 
     # 정상
+    logger.INFO("checksum success!)
+                
     return True
 
 # KTDO: 수정 완료
