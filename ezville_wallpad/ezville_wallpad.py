@@ -758,7 +758,7 @@ def serial_loop():
             # 해당 길이만큼 읽음
             # KTDO: 데이터 길이 + 2 (XOR + ADD) 만큼 읽음
             packet += conn.recv(data_length + 2)
-
+            logger.info(packet)
             # checksum 오류 없는지 확인
             # KTDO: checksum 및 ADD 오류 없는지 확인 
             if not serial_verify_checksum(packet):
