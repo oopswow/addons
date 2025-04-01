@@ -444,7 +444,19 @@ def mqtt_on_connect(mqtt, userdata, flags, rc):
         
 # KTDO: 수정 완료
 def mqtt_on_disconnect(mqtt, userdata, flags, rc):
-    logger.warning("MQTT disconnected! ({})".format(rc))
+    
+    if rc == 0:
+        logger.info("브로커와 정상적으로 연결이 종료되었습니다.")
+    else:
+        logger.error(f"비정상적인 연결 종료! (코드: {rc})")
+
+        # 필요 시 재연결 시도
+        try:
+            client.reconnect()
+            logger.info("브로커와 재연결 시도중...")
+        except Exception as e:
+            logger.info(f"재연결 실패: {e}")
+
     global mqtt_connected
     mqtt_connected = False
 
