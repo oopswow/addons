@@ -72,20 +72,19 @@ STATE_HEADER = {
     for device, prop in RS485_DEVICE.items()
     if "state" in prop
 }
-''''''
-    0x0E: ("light", 0x81),
-    0x36: ("thermostat", 0x81),
-''''''
+#
+#    0x0E: ("light", 0x81),
+#    0x36: ("thermostat", 0x81),
 
 QUERY_HEADER = {
     prop["query"]["id"]: (device, prop["query"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
-'''
-    0x0E: ("light", 0x01),
-    0x36: ("thermostat", 0x01),
-'''
+#
+#    0x0E: ("light", 0x01),
+#    0x36: ("thermostat", 0x01),
+#
 
 
 # 제어 명령의 ACK header만 모음
@@ -95,11 +94,10 @@ ACK_HEADER = {
         for cmd, code in prop.items()
             if "ack" in code
 }
-'''
-    0x0E: ("light", 0xC1),
-    0x36: ("thermostat", 0xC4),
-
-'''
+#
+#    0x0E: ("light", 0xC1),
+#    0x36: ("thermostat", 0xC4),
+#
 
 # KTDO: 제어 명령과 ACK의 Pair 저장
 ACK_MAP = {}
@@ -110,16 +108,14 @@ for device, prop in RS485_DEVICE.items():
             ACK_MAP[code["id"]][code["cmd"]] = {}
             ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
 
-'''
-    0x0E: {
-        0x41: 0xC1,
-    },
-    0x36: {
-        0x44: 0xC4,
-        0x45: 0xC5,
-    },
-}
-'''
+#    0x0E: {
+#        0x41: 0xC1,
+#    },
+#    0x36: {
+#        0x44: 0xC4,
+#        0x45: 0xC5,
+#    },
+#}
 
 serial_queue = {}
 serial_ack = {}
@@ -553,26 +549,7 @@ def serial_new_device(device, packet):
 
 # KTDO: 수정 완료
 def serial_receive_state(device, packet):
-    """
-    Processes a received serial packet and updates the state of the specified device.
-    Args:
-        device (str): The type of device (e.g., "light", "thermostat") for which the packet is received.
-        packet (list): The received packet data as a list of integers.
-    Behavior:
-        - Extracts the device ID (`idn`) from the packet.
-        - Compares the current packet with the last known state for the device ID to avoid redundant processing.
-        - If the device ID is new and discovery mode is enabled, registers the device for discovery.
-        - Updates the last known state for the device ID.
-        - Publishes the device's state to MQTT topics based on the device type:
-            - For "light" devices, publishes the power state of individual lights.
-            - For "thermostat" devices, publishes power, away, target, and current states for each room.
-    Notes:
-        - The function uses global variables such as `RS485_DEVICE`, `Options`, `last_topic_list`, `logger`, and `mqtt`.
-        - The MQTT topics are dynamically generated based on the device type, group ID, room ID, and other parameters.
-        - Logging is performed for each state change that is published to MQTT.
-    Returns:
-        None
-    """
+
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
     
@@ -752,31 +729,7 @@ def serial_send_command():
 
 # KTDO: 수정 완료
 def serial_loop():
-    """
-    serial_loop()
-    이 함수는 장치와의 시리얼 통신을 처리하기 위한 연속 루프를 구현합니다.
-    들어오는 데이터 패킷을 처리하고, 체크섬을 검증하며, 통신 상태에 따라 명령을 전송합니다.
-    또한 장치 검색 및 필요한 경우 공격적인 명령 전송 모드를 관리합니다.
-    주요 기능:
-    - 들어오는 시리얼 데이터의 헤더를 읽고 처리합니다.
-    - 체크섬을 검증하고 데이터 패킷을 유효성 검사합니다.
-    - 장치 상태 응답 및 확인(ACK) 패킷을 처리합니다.
-    - 통신 상태에 따라 장치에 명령을 전송합니다.
-    - 장치 검색 및 공격적인 명령 전송 모드를 관리합니다.
-    로깅:
-    - 루프 시작 및 실행 중 발생하는 다양한 이벤트(예: 수신된 패킷, 체크섬 오류, 검색 완료 등)를 로깅합니다.
-    매개변수:
-    - 없음
-    반환값:
-    - 없음
-    참고:
-    - 이 함수는 무한히 실행되며 실시간 시리얼 통신 환경에서 사용하도록 설계되었습니다.
-    - `serial_get_header`, `serial_verify_checksum`, `serial_send_command`, `serial_receive_state`, 
-      `serial_ack_command`와 같은 여러 외부 함수 및 변수에 의존합니다.
-    - `serial_queue`, `conn`, `Options`, `logger`와 같은 전역 변수와 상호작용합니다.
-    KTDO (Known To Do):
-    - 코드 내 여러 주석은 데이터 길이 처리, 체크섬 검증, 패킷 생성과 같은 추가 구현 또는 개선이 필요한 영역을 나타냅니다.
-    """
+
     logger.info("start loop ...")
     loop_count = 0
     scan_count = 0
@@ -854,29 +807,29 @@ def serial_loop():
                 conn.set_pending_recv()
 
         # 전체 루프 수 카운트
-        '''# KTDO: 가스 밸브 쿼리로 확인
+        # KTDO: 가스 밸브 쿼리로 확인
         #global HEADER_0_FIRST
         # KTDO: 2번째 Header가 장치 Header임
         #if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
-            loop_count += 1
+        #    loop_count += 1
 
             # 돌만큼 돌았으면 상황 판단
-            if loop_count == 300:
+        #    if loop_count == 300:
                 # discovery: 가끔 비트가 튈때 이상한 장치가 등록되는걸 막기 위해, 시간제한을 둠
-                if Options["mqtt"]["_discovery"]:
-                    logger.info("Add new device:  All done.")
-                    Options["mqtt"]["_discovery"] = False
-                else:
-                    logger.info("running stable...")
+        #        if Options["mqtt"]["_discovery"]:
+        #            logger.info("Add new device:  All done.")
+        #            Options["mqtt"]["_discovery"] = False
+        #        else:
+        #            logger.info("running stable...")
 
                 # 스캔이 없거나 적으면, 명령을 내릴 타이밍을 못잡는걸로 판단, 아무때나 닥치는대로 보내봐야한다.
-                if Options["serial_mode"] == "serial" and scan_count < 30:
-                    logger.warning("initiate aggressive send mode!", scan_count)
-                    send_aggressive = True
+        #        if Options["serial_mode"] == "serial" and scan_count < 30:
+        #            logger.warning("initiate aggressive send mode!", scan_count)
+        #            send_aggressive = True
 
             # HA 재시작한 경우
-            elif loop_count > 30 and Options["mqtt"]["_discovery"]:
-                loop_count = 1
+        #    elif loop_count > 30 and Options["mqtt"]["_discovery"]:
+        #        loop_count = 1
 
         # 루프 카운트 세는데 실패하면 다른 걸로 시도해봄
         #if loop_count == 0 and time.time() - start_time > 6:
@@ -884,8 +837,7 @@ def serial_loop():
         #    HEADER_0_FIRST = header_0_first_candidate.pop()
         #    start_time = time.time()
         #    scan_count = 0'
-        '''
-
+        
 # KTDO: 수정 완료
 def dump_loop():
     dump_time = Options["rs485"]["dump_time"]
