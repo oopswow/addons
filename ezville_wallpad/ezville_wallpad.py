@@ -553,6 +553,26 @@ def serial_new_device(device, packet):
 
 # KTDO: 수정 완료
 def serial_receive_state(device, packet):
+    """
+    Processes a received serial packet and updates the state of the specified device.
+    Args:
+        device (str): The type of device (e.g., "light", "thermostat") for which the packet is received.
+        packet (list): The received packet data as a list of integers.
+    Behavior:
+        - Extracts the device ID (`idn`) from the packet.
+        - Compares the current packet with the last known state for the device ID to avoid redundant processing.
+        - If the device ID is new and discovery mode is enabled, registers the device for discovery.
+        - Updates the last known state for the device ID.
+        - Publishes the device's state to MQTT topics based on the device type:
+            - For "light" devices, publishes the power state of individual lights.
+            - For "thermostat" devices, publishes power, away, target, and current states for each room.
+    Notes:
+        - The function uses global variables such as `RS485_DEVICE`, `Options`, `last_topic_list`, `logger`, and `mqtt`.
+        - The MQTT topics are dynamically generated based on the device type, group ID, room ID, and other parameters.
+        - Logging is performed for each state change that is published to MQTT.
+    Returns:
+        None
+    """
     form = RS485_DEVICE[device]["state"]
     last = RS485_DEVICE[device]["last"]
     
@@ -564,7 +584,10 @@ def serial_receive_state(device, packet):
 
     # 해당 ID의 이전 상태와 같은 경우 바로 무시
     if last.get(idn) == packet:
+        logger.info("Condition met: last[idn] == packet")
         return
+    else:
+        logger.info("Condition not met: last[idn] != packet")
 
     # 처음 받은 상태인 경우, discovery 용도로 등록한다.
     if Options["mqtt"]["_discovery"] and not last.get(idn):
