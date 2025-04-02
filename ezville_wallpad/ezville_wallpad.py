@@ -72,20 +72,20 @@ STATE_HEADER = {
     for device, prop in RS485_DEVICE.items()
     if "state" in prop
 }
-#STATE_HEADER = {
-#    0x0E: ("light", 0x81),
-#    0x36: ("thermostat", 0x81),
-#}
+''''''
+    0x0E: ("light", 0x81),
+    0x36: ("thermostat", 0x81),
+''''''
 
 QUERY_HEADER = {
     prop["query"]["id"]: (device, prop["query"]["cmd"])
     for device, prop in RS485_DEVICE.items()
     if "query" in prop
 }
-#QUERY_HEADER = {
-#    0x0E: ("light", 0x01),
-#    0x36: ("thermostat", 0x01),
-#}
+'''
+    0x0E: ("light", 0x01),
+    0x36: ("thermostat", 0x01),
+'''
 
 
 # 제어 명령의 ACK header만 모음
@@ -95,11 +95,11 @@ ACK_HEADER = {
         for cmd, code in prop.items()
             if "ack" in code
 }
-#ACK_HEADER = {
-#    0x0E: ("light", 0xC1),
-#    0x36: ("thermostat", 0xC4), # Note: Duplicate ID keys will overwrite in Python dictionaries.
-#}
+'''
+    0x0E: ("light", 0xC1),
+    0x36: ("thermostat", 0xC4),
 
+'''
 
 # KTDO: 제어 명령과 ACK의 Pair 저장
 ACK_MAP = {}
@@ -110,21 +110,16 @@ for device, prop in RS485_DEVICE.items():
             ACK_MAP[code["id"]][code["cmd"]] = {}
             ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
 
-#ACK_MAP = {
-#    0x0E: {
-#        0x41: 0xC1,
-#    },
-#    0x36: {
-#        0x44: 0xC4,
-#        0x45: 0xC5,
-#    },
-#}
-
-
-
-# KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
-#HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
-#header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
+'''
+    0x0E: {
+        0x41: 0xC1,
+    },
+    0x36: {
+        0x44: 0xC4,
+        0x45: 0xC5,
+    },
+}
+'''
 
 serial_queue = {}
 serial_ack = {}
@@ -163,8 +158,10 @@ class EzVilleSerial:
         return self._ser.read(count)
 
     def recv(self, count=1):
-        # serial은 pending count만 업데이트
+        # Only update the pending count for serial
         self._pending_recv = max(self._pending_recv - count, 0)
+        if self._pending_recv < 0:
+            self._pending_recv = 0
         return self._recv_raw(count)
 
     def send(self, a):
