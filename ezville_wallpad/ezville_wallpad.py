@@ -173,7 +173,10 @@ class EzVilleSerial:
     def set_pending_recv(self):
         self._pending_recv = self._ser.in_waiting
 
-    def check_pending_recv(self):
+    def get_pending_receive_count(self):
+        # Ensure _pending_recv is non-negative
+        if self._pending_recv < 0:
+            self._pending_recv = 0
         return self._pending_recv
 
     def check_in_waiting(self):
@@ -752,6 +755,31 @@ def serial_send_command():
 
 # KTDO: 수정 완료
 def serial_loop():
+    """
+    serial_loop()
+    이 함수는 장치와의 시리얼 통신을 처리하기 위한 연속 루프를 구현합니다.
+    들어오는 데이터 패킷을 처리하고, 체크섬을 검증하며, 통신 상태에 따라 명령을 전송합니다.
+    또한 장치 검색 및 필요한 경우 공격적인 명령 전송 모드를 관리합니다.
+    주요 기능:
+    - 들어오는 시리얼 데이터의 헤더를 읽고 처리합니다.
+    - 체크섬을 검증하고 데이터 패킷을 유효성 검사합니다.
+    - 장치 상태 응답 및 확인(ACK) 패킷을 처리합니다.
+    - 통신 상태에 따라 장치에 명령을 전송합니다.
+    - 장치 검색 및 공격적인 명령 전송 모드를 관리합니다.
+    로깅:
+    - 루프 시작 및 실행 중 발생하는 다양한 이벤트(예: 수신된 패킷, 체크섬 오류, 검색 완료 등)를 로깅합니다.
+    매개변수:
+    - 없음
+    반환값:
+    - 없음
+    참고:
+    - 이 함수는 무한히 실행되며 실시간 시리얼 통신 환경에서 사용하도록 설계되었습니다.
+    - `serial_get_header`, `serial_verify_checksum`, `serial_send_command`, `serial_receive_state`, 
+      `serial_ack_command`와 같은 여러 외부 함수 및 변수에 의존합니다.
+    - `serial_queue`, `conn`, `Options`, `logger`와 같은 전역 변수와 상호작용합니다.
+    KTDO (Known To Do):
+    - 코드 내 여러 주석은 데이터 길이 처리, 체크섬 검증, 패킷 생성과 같은 추가 구현 또는 개선이 필요한 영역을 나타냅니다.
+    """
     logger.info("start loop ...")
     loop_count = 0
     scan_count = 0
@@ -790,7 +818,7 @@ def serial_loop():
                 continue
 
             # 디바이스 응답 뒤에도 명령 보내봄
-            if serial_queue and not conn.check_pending_recv():
+            if serial_queue and not conn.get_pending_receive_count():
                 serial_send_command()
                 conn.set_pending_recv()
 
@@ -829,14 +857,14 @@ def serial_loop():
                 conn.set_pending_recv()
 
         # 전체 루프 수 카운트
-        # KTDO: 가스 밸브 쿼리로 확인
+        '''# KTDO: 가스 밸브 쿼리로 확인
         #global HEADER_0_FIRST
         # KTDO: 2번째 Header가 장치 Header임
         #if header_1 == HEADER_0_FIRST[0][0] and (header_3 == HEADER_0_FIRST[0][1] or header_3 == HEADER_0_FIRST[1][1]):
-        #    loop_count += 1
+            loop_count += 1
 
             # 돌만큼 돌았으면 상황 판단
-            if loop_count == 30:
+            if loop_count == 300:
                 # discovery: 가끔 비트가 튈때 이상한 장치가 등록되는걸 막기 위해, 시간제한을 둠
                 if Options["mqtt"]["_discovery"]:
                     logger.info("Add new device:  All done.")
@@ -858,7 +886,8 @@ def serial_loop():
         #    print("check loop count fail: there are no F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}! try F7 {:02X} ** {:02X} or F7 {:02X} ** {:02X}...".format(HEADER_0_FIRST[0][0],HEADER_0_FIRST[0][1],HEADER_0_FIRST[1][0],HEADER_0_FIRST[1][1],header_0_first_candidate[-1][0][0],header_0_first_candidate[-1][0][1],header_0_first_candidate[-1][1][0],header_0_first_candidate[-1][1][1]))
         #    HEADER_0_FIRST = header_0_first_candidate.pop()
         #    start_time = time.time()
-        #    scan_count = 0
+        #    scan_count = 0'
+        '''
 
 # KTDO: 수정 완료
 def dump_loop():
