@@ -452,7 +452,7 @@ def mqtt_on_disconnect(mqtt, userdata, flags, rc):
 
         # 필요 시 재연결 시도
         try:
-            client.reconnect()
+            mqtt.reconnect()
             logger.info("브로커와 재연결 시도중...")
         except Exception as e:
             logger.info(f"재연결 실패: {e}")
@@ -540,6 +540,8 @@ def serial_new_device(device, packet):
         # KTDO: EzVille에 맞게 수정
         grp_id = int(packet[2] >> 4)
         room_count = int((int(packet[4]) - 5) / 2)
+        
+        logger.info(f"Registering device: {device}, grp_id: {grp_id}, room_count: {room_count}")
         
         for id in range(1, room_count + 1):
             payload = DISCOVERY_PAYLOAD[device][0].copy()
