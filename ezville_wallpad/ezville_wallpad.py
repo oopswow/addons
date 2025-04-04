@@ -679,6 +679,7 @@ def serial_loop():
             serial_receive_state(device, packet)
 
         # KTDO: 이전 명령의 ACK 경우
+        ## thermostat ACK 관련 변경 작업 필요
         elif header_1 in ACK_HEADER and header_3 in ACK_HEADER[header_1]:
             header = header_0 << 24 | header_1 << 16 | header_2 << 8 | header_3
 
