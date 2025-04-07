@@ -547,8 +547,16 @@ def serial_receive_state(device, packet):
                 value2 = "ON"
             else:
                 value2 = "OFF"
-            value3 = packet[8 + id * 2]
-            value4 = packet[9 + id * 2]
+            #value3 = packet[8 + id * 2]
+            if (packet[8 + id * 2] >> 7 ):
+                value3 = (packet[8 + id *2] & 0x1F) + 0.5
+            else:
+                value3 = (packet[8 + id *2] & 0x1F)
+            #value4 = packet[9 + id * 2]
+            if (packet[9 + id * 2] >> 7 ):
+                value4 = (packet[9 + id *2] & 0x1F) + 0.5
+            else:
+                value4 = (packet[9 + id *2] & 0x1F)
             
             if last_topic_list.get(topic1) != value1:
                 logger.info("publish to HA:   {} = {} ({})".format(topic1, value1, packet.hex()))
