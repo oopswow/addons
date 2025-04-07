@@ -99,10 +99,6 @@ HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
 header_0_first_candidate = [ [[0x33, 0x01], [0x33, 0x0F]], [[0x36, 0x01], [0x36, 0x0F]] ]
 
 
-# human error를 로그로 찍기 위해서 그냥 전부 구독하자
-SUB_LIST = { "{}/{}/+/+/command".format(Options["mqtt"]["prefix"], device) for device in RS485_DEVICE } |\
-           { "{}/virtual/{}/+/command".format(Options["mqtt"]["prefix"], device) for device in VIRTUAL_DEVICE }
-
 serial_queue = {}
 serial_ack = {}
 
