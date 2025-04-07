@@ -1,8 +1,8 @@
 {
 	"version": "8.4.5",
 	"slug": "ezville_wallpad",
-	"name": "EzVille RS485 Addon with Elevator Call",
-	"description": "이지빌용 수정된 애드온입니다.",
+	"name": "EzVille RS485 Addon",
+	"description": "이지빌 애드온",
 	"url": "https://github.com/oopswow/addons",
 	"startup": "application",
 	"boot": "auto",
@@ -28,7 +28,7 @@
 			"port": 8899
 		},
 		"mqtt": {
-			"server": "192.168.1.116",
+			"server": "192.168.1.26",
 			"port": 1883,
 			"need_login": true,
 			"user": "mqtt_user",
