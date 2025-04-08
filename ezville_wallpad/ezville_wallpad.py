@@ -337,7 +337,7 @@ def mqtt_device(topics, payload):
         packet[2] = int(idn.split("_")[0]) << 4 | int(idn.split("_")[1])
         packet[3] = cmd["cmd"]
         packet[4] = 0x01
-        packet[5] = int(float(payload))
+        packet[5] = payload
         packet[6], packet[7] = serial_generate_checksum(packet)
     
     packet = bytes(packet)
@@ -356,7 +356,7 @@ def mqtt_init_discovery():
     
 def mqtt_on_message(mqtt, userdata, msg):
     topics = msg.topic.split("/")
-    payload = msg.payload.decode()
+    payload = msg.payload.decode().strip()
 
     logger.info("recv. from HA:   {} = {}".format(msg.topic, payload))
 
@@ -367,6 +367,14 @@ def mqtt_on_message(mqtt, userdata, msg):
     elif device == "debug":
         mqtt_debug(topics, payload)
     else:
+        if device == "thermostat":
+            if float(payload) % 1 == 0.5:
+                payload = 0x80 | int(float(payload))
+            else:
+                payload = int(float(payload))
+        else:
+            payload = int(float(payload))
+            
         mqtt_device(topics, payload)
 
         
