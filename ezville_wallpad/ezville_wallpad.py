@@ -624,6 +624,11 @@ def serial_send_command():
     conn.send(cmd)
 
     ack = bytearray(cmd[0:4])
+    
+    # 우리집 난방 ACK은 방번호를 지정하지 않고 무조건 1F로 들어옴
+    if ack[1] == 0x36:
+        ack[2] = 0x1F
+        
     ack[3] = ACK_MAP[cmd[1]][cmd[3]]
     waive_ack = False
     if ack[3] == 0x00:
