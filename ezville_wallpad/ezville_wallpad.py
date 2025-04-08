@@ -372,8 +372,6 @@ def mqtt_on_message(mqtt, userdata, msg):
                 payload = 0x80 | int(float(payload))
             else:
                 payload = int(float(payload))
-        else:
-            payload = int(float(payload))
             
         mqtt_device(topics, payload)
 
