@@ -82,13 +82,24 @@ ACK_HEADER = {
             if "ack" in code
 }
 
+#ACK_MAP = {}
+#for device, prop in RS485_DEVICE.items():
+#    for cmd, code in prop.items():
+#        if "ack" in code:
+#            if code["id"] not in ACK_MAP:
+#                ACK_MAP[code["id"]] = {}
+#            ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
+
 ACK_MAP = {}
 for device, prop in RS485_DEVICE.items():
     for cmd, code in prop.items():
         if "ack" in code:
-            ACK_MAP[code["id"]] = {}
-            ACK_MAP[code["id"]][code["cmd"]] = {}
+            # id가 ACK_MAP에 없으면 새 딕셔너리 생성
+            if code["id"] not in ACK_MAP:
+                ACK_MAP[code["id"]] = {}
+            # cmd와 ack 추가 (기존 id 항목 유지)
             ACK_MAP[code["id"]][code["cmd"]] = code["ack"]
+
 
 # KTDO: Ezville에서는 가스밸브 STATE Query 코드로 처리
 HEADER_0_FIRST = [ [0x12, 0x01], [0x12, 0x0F] ]
@@ -620,6 +631,8 @@ def serial_ack_command(packet):
 
 def serial_send_command():
     # 한번에 여러개 보내면 응답이랑 꼬여서 망함
+    logger.info(f"Sending command: {cmd.hex()}")
+
     cmd = next(iter(serial_queue))
     conn.send(cmd)
 
