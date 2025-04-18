@@ -316,6 +316,10 @@ def mqtt_device(topics, payload):
     if device == "thermostat" and cmd == 0x44:
         if float(payload) % 1 == 0.5:
             payload = 0x80 | int(float(payload))
+        else:
+            payload = int(float(payload))
+    else:
+        payload = int(float(payload))
 
     # 오류 체크 끝났으면 serial 메시지 생성
     cmd = RS485_DEVICE[device][cmd]
@@ -329,7 +333,7 @@ def mqtt_device(topics, payload):
         packet[3] = cmd["cmd"]
         packet[4] = 0x03
         packet[5] = int(idn.split("_")[2])
-        packet[6] = int(float(payload))
+        packet[6] = payload
         packet[7] = 0x00
         packet[8], packet[9] = serial_generate_checksum(packet)
 
