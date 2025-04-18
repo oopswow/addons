@@ -361,13 +361,14 @@ def mqtt_on_message(mqtt, userdata, msg):
     logger.info("recv. from HA:   {} = {}".format(msg.topic, payload))
 
     device = topics[1]
+    cmd = topics[3]
     if device == "status":
         if payload == "online":
             mqtt_init_discovery()
     elif device == "debug":
         mqtt_debug(topics, payload)
     else:
-        if device == "thermostat":
+        if device == "thermostat" and cmd in (0x81, 0x44, 0xC4):
             if float(payload) % 1 == 0.5:
                 payload = 0x80 | int(float(payload))
             else:
