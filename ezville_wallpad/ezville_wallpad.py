@@ -631,11 +631,9 @@ def serial_ack_command(packet):
 
 def serial_send_command():
     # 한번에 여러개 보내면 응답이랑 꼬여서 망함
-    logger.info(f"Sending command: {cmd.hex()}")
-
     cmd = next(iter(serial_queue))
     conn.send(cmd)
-
+    logger.info(f"Sending command: {cmd.hex()}")
     ack = bytearray(cmd[0:4])
     
     # 우리집 난방 ACK은 방번호를 지정하지 않고 무조건 1F로 들어옴
