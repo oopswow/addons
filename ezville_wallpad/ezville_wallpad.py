@@ -24,10 +24,11 @@ RS485_DEVICE = {
         "query":    { "id": 0x36, "cmd": 0x01, },
         "state":    { "id": 0x36, "cmd": 0x81, },
         "last":     { },
-
-        "away":    { "id": 0x36, "cmd": 0x45, "ack": 0x00, },
+        
+        "power":    { "id": 0x36, "cmd": 0x43, "ack": 0xC3, },
         "target":   { "id": 0x36, "cmd": 0x44, "ack": 0xC4, },
-        "power":    { "id": 0x36, "cmd": 0x45, "ack": 0xC5, },
+        "away":    { "id": 0x36, "cmd": 0x46, "ack": 0xC6, },
+
 
     },
 }
