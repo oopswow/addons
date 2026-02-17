@@ -694,8 +694,13 @@ def serial_loop():
             
             # 해당 길이만큼 읽음
             # KTDO: 데이터 길이 + 2 (XOR + ADD) 만큼 읽음
-            packet += conn.recv(data_length + 2)
-
+            #packet += conn.recv(data_length + 2)
+            data = conn.recv(data_length + 2)
+            if data is None or len(data) == 0:
+                logger.error("Connection lost, reconnecting...")
+                conn = reconnect()   # 재연결 로직 호출
+                continue
+            packet += data
             # checksum 오류 없는지 확인
             # KTDO: checksum 및 ADD 오류 없는지 확인 
             if not serial_verify_checksum(packet):
